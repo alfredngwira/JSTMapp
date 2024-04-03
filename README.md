@@ -24,3 +24,6 @@ To run the app in R, the user needs to have the following R dependencies install
 ```shiny, INLA, ggplot2, gridExtra, RColorBrewer, cleangeo, Hmisc, rmapshaper, shinyjs, dplyr, spdep, raster, and tmap```
 
 This is so since all computations are done on the local computer thereby avoiding user disconnections due to memory problems. 
+
+## Example data
+Bovine tuberculosis in cattle and extrapulmunary tuberculosis in humans in Africa is the example data for illustration used in the full article about JSTMapp which can be downloaded from "here".
