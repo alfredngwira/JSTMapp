@@ -26,4 +26,4 @@ To run the app in R, the user needs to have the following R dependencies install
 This is so since all computations are done on the local computer thereby avoiding user disconnections due to memory problems. 
 
 ## Example data
-Bovine tuberculosis in cattle and extrapulmunary tuberculosis in humans in Africa is the example data for illustration used in the full article about JSTMapp which can be downloaded from "here".
+Bovine tuberculosis in cattle and extrapulmunary tuberculosis in humans in Africa is the example data for illustration used in the full article about JSTMapp which can be downloaded from [here](https://github.com/alfredngwira/JSTMapp/blob/main/JSTMapp/joint.csv).
