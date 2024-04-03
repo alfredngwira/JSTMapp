@@ -3,9 +3,9 @@
 JSTMapp was developed to ease the fitting of joint spatio-temporal models by R INLA to epidemiologists with limited programming skills. In its current status, it impliments joint spatio-temporal modelling of two diseases with no covariates other than space and time.
 ## How to use the software
 ### Online
-The app can be used online by following the shiny link https://alfredngwira.shinyapps.io/JSTMapp. In this regard, computations are done at the shiny server and the user computer does not need to have R software. The challenges associated with the online usage is that the memory associated with the free plan is usually not eneough for some heavy computations which results in user disconnections. 
+The application can be used online by following the shiny link https://alfredngwira.shinyapps.io/JSTMapp. In this regard, computations are done on the shiny server computer and hence the user computer does not need to have R software. The challenges associated with the online usage is that the memory associated with the free plan is usually not enough for some heavy computations which results in frequent user disconnections. 
 ### In R/ RStudio
-We recommnend to use it in R by downloading the app from Github author page by executing the command: 
+We therefore recommnend to use it in R by downloading the app from Github author page by executing the command: 
 
 ```devtools::install_github("alfredngwira/JSTMapp", ref="main")```
 
