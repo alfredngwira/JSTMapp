@@ -6,10 +6,10 @@ The app can used by following the shiny page https://alfredngwira.shinyapps.io/J
 
 It can also be used by downloading the app from Github author page in R software as 
 
-devtools::install_github("alfredngwira/JSTMapp", ref="main")
+```devtools::install_github("alfredngwira/JSTMapp", ref="main")```
 
 After downloading the app in R, it can then be run by executing the following commands:
 
-library(JSTMapp)
+```library(JSTMapp)
 
-run_app()
+run_app()```
