@@ -1,7 +1,5 @@
 
 #Loading required packages
-#options(repos=c("INLA"="https://inla.r-inla-download.org/R/stable","CRAN" = "https://cloud.r-project.org/"))
-#options(repos=c("tmap"="https://r-tmap.r-universe.dev","CRAN" = "https://cloud.r-project.org/"))
 
 library("shiny")
 library("INLA")
