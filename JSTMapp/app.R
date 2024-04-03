@@ -15,6 +15,7 @@ library("shinyjs") # ui to appear
 library("dplyr") # summarize ()
 library("spdep") # poly2nb
 library("raster")
+library("tmap")
 
 #Setting upload size for shapefiles
 
