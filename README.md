@@ -19,5 +19,9 @@ Alternatively, the user can access the web-based user interface by executing the
 
 ```shiny::runGitHub("alfredngwira/JSTMapp",subdir="JSTMapp")```
 
-To run the app in R, the user needs to have all the R dependencies installed. The use of the app in R is better than online since there are no memory problems as computations are done on the local computer.
+To run the app in R, the user needs to have the following R dependencies installed:
+
+```shiny, INLA, ggplot2, gridExtra, RColorBrewer, cleangeo, Hmisc, rmapshaper, shinyjs, dplyr, spdep, raster, and tmap```
+
+The use of the app in R is better than online since there are no memory problems as computations are done on the local computer.
 
