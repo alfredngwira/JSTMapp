@@ -1,4 +1,4 @@
-
+myApp <- function(...) {
 #Loading required packages
 
 library("shiny")
@@ -459,3 +459,4 @@ rcorr(as.matrix(betas))
 }
 
 shinyApp(ui = ui, server = server)
+}
