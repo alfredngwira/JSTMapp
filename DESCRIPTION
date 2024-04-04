@@ -1,11 +1,10 @@
-Package: MBGapp
+Package: JSTMapp
 Type: Package
-Title: Shiny application to analyse geostatistical model
+Title: Shiny application to fit joint spatio-temporal model
 Version: 0.1.0
-Author: Olatunji Johnson [cre, aut] (<https://orcid.org/0000-0002-4080-0999>), Claudio Fronterre, Emanuele Giorgi
-Maintainer: Olatunji Johnson <olatunjijohnson21111@gmail.com>
-Description: Allow users to analyse geostatistical model in an interactive manner.
-    This app is developed for teaching purposes.
+Author: Alfred Ngwira [cre, aut] (<https://orcid.org/0000-0001-7026-4894>)
+Maintainer: Alfred Ngwira <angwira@luanar.ac.mw>
+Description: Allow users to fit joint spatio-temporal analyse model in an interactive manner.
 Imports: geoR, ggplot2, shiny, sf, tmap, tidyverse, leaflet, rgdal, PrevMap, splancs, grDevices, shinyjs, splines
 License: MIT + file LICENSE
 Encoding: UTF-8
