@@ -8,6 +8,7 @@ The application can be used online by following the shiny link https://alfredngw
 We strongly recommnend to use it in R by downloading the app from Github author page by executing the command:
 
 ```install.packages("devtools")```
+
 ```devtools::install_github("alfredngwira/JSTMapp", ref="main")```
 
 After downloading the app in R, the web-based user interface can be accessed by executing the following commands:
