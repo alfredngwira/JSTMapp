@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Alfred Ngwira [cre, aut] (<https://orcid.org/0000-0001-7026-4894>)
 Maintainer: Alfred Ngwira <angwira@luanar.ac.mw>
 Description: Allow users to fit joint spatio-temporal analyse model in an interactive manner.
-Imports: shiny,ggplot2,INLA,gridExtra,RColorBrewer,Hmisc,rmapshaper,shinyjs,dplyr,spdep,raster,tmap,tidyr,gstat
+Imports:'shiny','ggplot2',INLA,gridExtra,'RColorBrewer','Hmisc',rmapshaper,'shinyjs',dplyr,spdep,raster,tmap,tidyr,gstat
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
