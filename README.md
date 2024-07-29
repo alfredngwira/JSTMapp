@@ -24,7 +24,7 @@ Alternatively, the user can access the web-based user interface by executing the
 
 To run the app in R, the user needs to have the following R dependencies installed:
 
-```shiny,ggplot2,INLA,gridExtra,RColorBrewer,Hmisc,rmapshaper,shinyjs,dplyr,spdep,raster,tmap,tidyr,gstat```
+```shiny,ggplot2,INLA,gridExtra,RColorBrewer,cleangeo,Hmisc,rmapshaper,shinyjs,dplyr,spdep,raster,tmap```
 
 This is so since all computations are done on the local computer thereby avoiding user disconnections due to memory problems.
 
