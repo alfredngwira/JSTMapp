@@ -20,9 +20,7 @@ library("gstat")
 
 #Setting upload size for files and R
 
-options(shiny.maxRequestSize=70*1024^2)
-
-memory.size(max = FALSE)
+options(shiny.maxRequestSize=40*1024^2)
 
 # define the user interface object with the appearance of the app
 
