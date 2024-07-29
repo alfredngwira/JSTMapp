@@ -1,6 +1,6 @@
-#' JSTMapp: a shiny application for analyzing space-time pattern, cluster detection, and association with risk factors of health outcomes
+#' JSTMapp: a shiny application for joint spatio-temporal modeling of two disease outcomes using R-INLA
 #'
 #'
 #' @docType package
-#' @name STEHealthApp
+#' @name JSTMapp
 NULL
