@@ -1,4 +1,17 @@
-#Loading required packages
+# ==================================== Check packages  ====================================
+
+list.of.packages <- c("shiny", "ggplot2","gridExtra","RColorBrewer","Hmisc","rmapshaper","shinyjs","dplyr","spdep","raster","tmap","tidyr","gstat")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+
+if(!require(INLA)){
+  install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+  library(INLA)
+}
+
+
+# ==================================== import packages  ==================================== 
 library(shiny)
 library(ggplot2) 
 library(INLA)
