@@ -1,7 +1,3 @@
-list.of.packages <- c("shiny", "INLA","ggplot2","gridExtra","RColorBrewer","Hmisc","rmapshaper","shinyjs","dplyr","spdep","raster","tmap","tidyr","gstat")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-
 #import packages   
 library(shiny)
 library(ggplot2) 
