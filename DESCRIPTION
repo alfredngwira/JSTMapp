@@ -8,7 +8,7 @@ Description: Allow users to fit joint spatio-temporal analyse model in an intera
 Imports: shiny,ggplot2,INLA,gridExtra,RColorBrewer,Hmisc,rmapshaper,shinyjs,dplyr,spdep,raster,tmap,tidyr,gstat
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 7.0.2
 Suggests:
     knitr,
