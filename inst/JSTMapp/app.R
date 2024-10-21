@@ -42,7 +42,7 @@ mainPanel(
                  ),
         tabPanel("Model estimation", verbatimTextOutput("summary")),
         tabPanel("Spatial and temporal risk", plotOutput("map3",height="250px"),plotOutput("plot2",height="250px")),
-        tabPanel("Spatio-temporal risk", fluidRow(fluidRow(
+        tabPanel("Spatiotemporal risk", fluidRow(fluidRow(
                             splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:40px",plotOutput("map4",height="250px")), plotOutput("map5",height="250px"))
                           ), fluidRow(
                             splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:40px",plotOutput("map6",height="250px")), plotOutput("map7",height="250px"))
