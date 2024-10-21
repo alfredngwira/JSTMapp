@@ -17,7 +17,7 @@ After downloading the application in R, the web-based user interface can be acce
 
 Alternatively, the user can access the web-based user interface by executing the following command:
 
-```shiny::runGitHub("alfredngwira/JSTMapp",subdir="JSTMapp")```  shiny
+```shiny::runGitHub("alfredngwira/JSTMapp",subdir="inst/JSTMapp")```  shiny
 
 To run the application in R, the user needs to have the following R packages installed:
 
