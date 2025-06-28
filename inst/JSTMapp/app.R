@@ -14,6 +14,7 @@ library(tidyr)
 library(gstat)
 library(leaflet)
 library(dotwhisker)
+library(sn)
 
 #Setting upload size for files and R
 
@@ -880,7 +881,7 @@ formula<-observed~-1+intercept+
     }
 } else if (input$numbercovariates=="One") {
   if (input$model=="Spatial") {
-  formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+  formula<-observed~-1+intercept+covariate1.1+covariate1.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -890,7 +891,7 @@ formula<-observed~-1+intercept+
   f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
   f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
   } else if (input$model=="Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+
   f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
@@ -900,7 +901,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+intercept+
   f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
     } else if (input$model=="Spatial + Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -919,7 +920,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+intercept+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
   } 
 else if (input$model=="Spatiotemporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -944,7 +945,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+intercept+
     }
 }else if (input$numbercovariates=="Two") {
 if (input$model=="Spatial") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -954,7 +955,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+interce
   f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
   f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
 } else if (input$model=="Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+
   f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
@@ -964,7 +965,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+interce
   f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 } else if (input$model=="Spatial + Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -983,7 +984,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+interce
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 
 } else if (input$model=="Spatiotemporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -1009,7 +1010,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+interce
 
 } else if (input$numbercovariates=="Three") {
 if (input$model=="Spatial") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+ 
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -1020,7 +1021,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
 
 } else if (input$model=="Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+
   f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
@@ -1030,7 +1031,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 } else if (input$model=="Spatial + Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -1048,7 +1049,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 } else if (input$model=="Spatiotemporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -1073,7 +1074,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   }
 } else if (input$numbercovariates=="Four") {
 if (input$model=="Spatial") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+ 
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -1083,7 +1084,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
   f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
 } else if (input$model=="Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+ 
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+
   f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
@@ -1093,7 +1094,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 } else if (input$model=="Spatial + Temporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+ 
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -1111,7 +1112,7 @@ formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covaria
   f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
   f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 } else if (input$model=="Spatiotemporal") {
-formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+
+formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
