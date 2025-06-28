@@ -5,7 +5,6 @@ library(INLA)
 library(gridExtra)
 library(RColorBrewer)
 library(Hmisc) 
-library(rmapshaper)
 library(shinyjs) 
 library(dplyr) 
 library(spdep)
@@ -22,22 +21,31 @@ options(shiny.maxRequestSize=70*1024^2)
 
 memory.size(max = FALSE)
 
-# define the user interface object with the appearance of the app
-
 ui <- fluidPage(
-useShinyjs(),
+useShinyjs(), tags$head(
+        tags$style(HTML("
+      .shiny-output-error-validation {
+        color: #ff0000;
+        font-weight: bold;
+      }
+    "))
+    ), 
   titlePanel(title=div(img(src="JSTMapp_logo.png", align = "right", height = 30, width = 100), "JSTM(Joint spatiotemporal modelling)")),
   sidebarLayout(
     sidebarPanel(
       fileInput(inputId="filedata", label="Upload data file (.csv):", accept = c("text/csv")),
-      helpText("Select area, time, cases and population:"),
+      helpText("Select area, time, cases, and population:"),
       fluidRow(column(6, uiOutput("id.area")),column(6, uiOutput("id.time"))),
       fluidRow(column(6, uiOutput("observed.1")),column(6, uiOutput("observed.2"))),
       fluidRow(column(6, uiOutput("population.1")),column(6, uiOutput("population.2")))
       ,
       conditionalPanel(condition="input.conditionedPanels==2",
-      radioButtons("numbercovariates","Number of covariates", choices = c("None", "One","Two","Three","Four"),inline=TRUE,selected = "None"),
-      radioButtons("precprior","Precision priors", choices = c("Inverse Gamma", "Uniform","Half-Cauchy"),inline=TRUE,selected = "Inverse Gamma"),
+      helpText("Select number of covariates, model, and precision prior:"),
+      fluidRow(
+        column(4,radioButtons("numbercovariates","Covariates", choices = c("None", "One","Two","Three","Four"),inline=F,selected = "None") ),
+        column(4,radioButtons("model","Model", choices = c("Spatial","Temporal","Spatial + Temporal","Spatiotemporal"),inline=F,selected = "Spatial") ), 
+        column(4,radioButtons("precprior","Precison prior", choices = c("Inverse Gamma", "Uniform","Half-Cauchy"),inline=F,selected = "Inverse Gamma") )
+       ),
       helpText("Select covariates (optional):"),
       fluidRow(column(6, uiOutput("covariate1")),column(6, uiOutput("covariate2"))),
       fluidRow(column(6, uiOutput("covariate3")),column(6, uiOutput("covariate4")))
@@ -45,7 +53,7 @@ useShinyjs(),
       fileInput(inputId = "filemap", label = "Upload shapefile (.shp):",accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE),
       conditionalPanel(condition="input.conditionedPanels==1",fluidRow(
         column(6, actionButton("showplots", "Show plots")))), conditionalPanel(condition="input.conditionedPanels==2", fluidRow(
-      column(6, actionButton("showsummary", "Summary of results"))))  
+      column(6, actionButton("showsummary", "Summary of results"))))    
 )
  ,
 mainPanel(
@@ -55,7 +63,7 @@ mainPanel(
                           ), div(style = "margin-left:12px",plotOutput("plot1",height="350px"))
                         )
                  ),
-        tabPanel("Model summary",value = 2, verbatimTextOutput("summary"),plotOutput("plot2")),
+        tabPanel("Model estimation",value = 2, verbatimTextOutput("summary"),plotOutput("plot2")),
         tabPanel("Spatial and temporal risk",value = 3, fluidRow(fluidRow(
                             splitLayout(div(style = "margin-left:40px",leafletOutput("map3",height="200px")), leafletOutput("map4",height="200px"),leafletOutput("map5",height="200px"))
                           ), fluidRow(
@@ -807,7 +815,47 @@ prior.fixed <- list(mean.intercept = 0, prec.intercept = 0.001,
 inla.scale<-FALSE
 
 #Model formula
-formula0<-observed~-1+intercept+
+if (input$numbercovariates=="None") {
+    if (input$model=="Spatial") {
+  formula<-observed~-1+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
+    } else if (input$model=="Temporal") {
+  formula<-observed~-1+intercept+
+    f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+    f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+    f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+    f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+    f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+    } else if (input$model=="Spatial + Temporal") {
+formula<-observed~-1+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+  } else if (input$model=="Spatiotemporal"){
+  formula<-observed~-1+intercept+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -829,9 +877,49 @@ formula0<-observed~-1+intercept+
   f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
   f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
   f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
-
-
-formula1<-observed~-1+intercept+ covariate1.1+covariate1.2+
+    }
+} else if (input$numbercovariates=="One") {
+  if (input$model=="Spatial") {
+  formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
+  } else if (input$model=="Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+    } else if (input$model=="Spatial + Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+  } 
+else if (input$model=="Spatiotemporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+intercept+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -853,8 +941,49 @@ formula1<-observed~-1+intercept+ covariate1.1+covariate1.2+
   f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
   f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
   f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
+    }
+}else if (input$numbercovariates=="Two") {
+if (input$model=="Spatial") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
+} else if (input$model=="Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+} else if (input$model=="Spatial + Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
 
-formula2<-observed~-1+intercept+ covariate1.1+covariate1.2+covariate2.1+covariate2.2+
+} else if (input$model=="Spatiotemporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+intercept+
   f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
     hyper=list(prec=prior.prec()))+
   f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
@@ -876,79 +1005,141 @@ formula2<-observed~-1+intercept+ covariate1.1+covariate1.2+covariate2.1+covariat
   f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
   f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
   f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
-
-formula3<-observed~-1+intercept+ covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+
-  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
-  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
-  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
-  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
-  f(sp.tm.idx1,model="iid",hyper=list(prec=prior.prec()))+
-  f(sp.tm.idx2,model="iid",hyper=list(prec=prior.prec()))+
-  f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
-  f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
-  f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
-
-formula4<-observed~-1+intercept+ covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+
-  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
-  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
-  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
-    hyper=list(prec=prior.prec()))+
-  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
-  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
-  f(sp.tm.idx1,model="iid",hyper=list(prec=prior.prec()))+
-  f(sp.tm.idx2,model="iid",hyper=list(prec=prior.prec()))+
-  f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
-  f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
-  f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
-
-if (input$numbercovariates == "None"){
-fit<-inla(formula0,family="poisson",E=expected,data=model.data(),
-                control.predictor=list(compute=TRUE),verbose=TRUE,
-                control.compute=list(return.marginals.predictor=TRUE,config=TRUE,dic=TRUE,cpo=TRUE),
-                control.inla(npoints=21,strategy="laplace"))
-}  else if (input$numbercovariates == "One") {
-fit<-inla(formula1,family="poisson",E=expected,data=model.data(),
-                control.predictor=list(compute=TRUE),verbose=TRUE,
-                control.compute=list(return.marginals.predictor=TRUE,config=TRUE,dic=TRUE,cpo=TRUE),
-                control.inla(npoints=21,strategy="laplace"))
-} else if (input$numbercovariates == "Two") {
-fit<-inla(formula2,family="poisson",E=expected,data=model.data(),
-                control.predictor=list(compute=TRUE),verbose=TRUE,
-                control.compute=list(return.marginals.predictor=TRUE,config=TRUE,dic=TRUE,cpo=TRUE),
-                control.inla(npoints=21,strategy="laplace"))
-} else if (input$numbercovariates == "Three") {
-fit<-inla(formula3,family="poisson",E=expected,data=model.data(),
-                control.predictor=list(compute=TRUE),verbose=TRUE,
-                control.compute=list(return.marginals.predictor=TRUE,config=TRUE,dic=TRUE,cpo=TRUE),
-                control.inla(npoints=21,strategy="laplace"))
-} else if (input$numbercovariates == "Four") {
-fit<-inla(formula4,family="poisson",E=expected,data=model.data(),
-                control.predictor=list(compute=TRUE),verbose=TRUE,
-                control.compute=list(return.marginals.predictor=TRUE,config=TRUE,dic=TRUE,cpo=TRUE),
-                control.inla(npoints=21,strategy="laplace"))
 }
+
+} else if (input$numbercovariates=="Three") {
+if (input$model=="Spatial") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+ 
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
+
+} else if (input$model=="Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+} else if (input$model=="Spatial + Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+} else if (input$model=="Spatiotemporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(sp.tm.idx1,model="iid",hyper=list(prec=prior.prec()))+
+  f(sp.tm.idx2,model="iid",hyper=list(prec=prior.prec()))+
+  f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
+  f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
+  f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
+  }
+} else if (input$numbercovariates=="Four") {
+if (input$model=="Spatial") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+ 
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))
+} else if (input$model=="Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+ 
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+} else if (input$model=="Spatial + Temporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+ 
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))
+} else if (input$model=="Spatiotemporal") {
+formula<-observed~-1+covariate1.1+covariate1.2+covariate2.1+covariate2.2+covariate3.1+covariate3.2+covariate4.1+covariate4.2+intercept+
+  f(sp.idx1,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.idx2,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.dum,model="besag",graph=w.sp,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(sp.1,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(sp.2,copy="sp.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s))+
+  f(tm.idx1,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.idx2,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.dum,model="besag",graph=w.tm,scale.model=inla.scale,
+    hyper=list(prec=prior.prec()))+
+  f(tm.1,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(tm.2,copy="tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.t))+
+  f(sp.tm.idx1,model="iid",hyper=list(prec=prior.prec()))+
+  f(sp.tm.idx2,model="iid",hyper=list(prec=prior.prec()))+
+  f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
+  f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
+  f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
+  }
+}
+
+fit<-inla(formula,family="poisson",E=expected,data=model.data(),
+                control.predictor=list(compute=TRUE),verbose=TRUE,
+                control.compute=list(return.marginals.predictor=TRUE,config=TRUE,dic=TRUE,cpo=TRUE),
+                control.inla(npoints=21,strategy="laplace"))
 return(fit)
 
 })
@@ -1040,6 +1231,17 @@ return(
 })
 
 output$map3 <- renderLeaflet({
+validate(
+  need(
+    if (input$model=="Spatial" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "map omitted-your model is non spatial"
+  )
+)
+
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tmap_leaflet(tm_shape(spatial.data()$carto1)+
@@ -1047,10 +1249,21 @@ tmap_leaflet(tm_shape(spatial.data()$carto1)+
               palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
               legend.reverse=T, style="fixed", breaks=values, midpoint = NA, interval.closure="left")+
 tm_layout(title=input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),in.shiny=TRUE)
+   
 })
 
 
 output$map4 <- renderLeaflet({
+validate(
+  need(
+    if (input$model=="Spatial" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "map omitted-your model is non spatial"
+  )
+)
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tmap_leaflet(tm_shape(spatial.data()$carto2)+
@@ -1063,6 +1276,16 @@ tm_layout(title=input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer
 
 
 output$map5 <- renderLeaflet({
+validate(
+  need(
+    if (input$model=="Spatial" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "map omitted-your model is non spatial"
+  )
+)
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tmap_leaflet(tm_shape(spatial.data()$carto3)+
@@ -1075,6 +1298,16 @@ tm_layout(title="Shared",inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins
 
 
 output$map6 <- renderLeaflet({
+validate(
+  need(
+    if (input$model=="Spatial" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "map omitted-your model is non spatial"
+  )
+)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
@@ -1086,6 +1319,16 @@ tm_layout(title=input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer
 })
 
 output$map7 <- renderLeaflet({
+validate(
+  need(
+    if (input$model=="Spatial" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "map omitted-your model is non spatial"
+  )
+)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
@@ -1097,6 +1340,16 @@ tm_layout(title=input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer
 
 
 output$map8 <- renderLeaflet({
+validate(
+  need(
+    if (input$model=="Spatial" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "map omitted-your model is non spatial"
+  )
+)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
@@ -1104,9 +1357,20 @@ tmap_leaflet(tm_shape(spatial.data()$carto3)+ tm_polygons(col="prob",
               palette=paleta,title = "Pr(Risk>1)",legend.show=T, border.col="transparent",
               legend.reverse=T, style="fixed", breaks=values, interval.closure="left")+
 tm_layout(title="Shared",inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),in.shiny=TRUE)
+
 })
 
 output$plot4 <- renderPlot({
+validate(
+  need(
+    if (input$model=="Temporal" | input$model=="Spatial + Temporal" | input$model=="Spatiotemporal") {
+      TRUE
+    } else {
+      FALSE
+    },
+    "plot omitted-your model has no temporal componet"
+  )
+)
 rr<-exp(joint.inla()$summary.random$tm.idx1[,"mean"])
 temporal.data1<-data.frame(time=min(data.select0()$id.time):max(data.select0()$id.time),rr)
 temporal.data1$disease=input$observed.1
@@ -1123,11 +1387,13 @@ temporal.data<-rbind(temporal.data1,temporal.data2,temporal.data3)
 
 ggplot(temporal.data, aes(x=time, y=rr, color =disease, shape=disease)) + scale_shape_manual(values=c(15,16,15))+
 geom_line(size=1,linetype = "dotdash")+labs(color="Category",size=14, x="\nTime", y = "Relative risk\n") +scale_color_manual(values=c("orange", "green", "yellow"))+
-scale_x_continuous(limits=c(NA,max(data.select0()$id.time)),breaks=seq(min(data.select0()$id.time),max(data.select0()$id.time),1))+guides(shape=none)
+scale_x_continuous(limits=c(NA,max(data.select0()$id.time)),breaks=seq(min(data.select0()$id.time),max(data.select0()$id.time),1))+guides(shape="none")
+  
 })
 
+
 ##Spatiotemporal risk
-carto<-reactive ({
+output$map9<- renderPlot({
 model.data<-data.frame(model.data())
 model.data$rr <- joint.inla()$summary.fitted.values[,"mean"] 
 a<-1
@@ -1136,21 +1402,14 @@ probability<-unlist(lapply(joint.inla()$marginals.fitted.values, function(X){
 }))
 model.data$prob<-probability
 model.data$id<-model.data$id.area
-dat1<-subset(model.data, disease=="1")  #Subsettting estimated values for disease 1
-dat1$rr1<-dat1$rr
-dat1$prob1<-dat1$prob
-dat2<-subset(model.data, disease=="2")   #Subsettting estimated values for disease 1
-dat2$rr2<-dat2$rr
-dat2$prob2<-dat2$prob
-merge.data<-merge(dat1,dat2, by=c("id","id.time"))
-carto <- merge(spatial.data()$sfpolygon,merge.data,by="id", all.x=TRUE)
-carto
-})
-output$map9<- renderPlot({
+dat1<-model.data[model.data$disease=="1",]
+sfpolygon<-st_as_sf(map(),fill = TRUE, group = TRUE)
+sfpolygon$id<-row.names(sfpolygon)
+carto <- merge(sfpolygon,dat1,by="id", all.x=TRUE)
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
-values <- c(0.0,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
-tm_shape(carto())+
-  tm_polygons(col="rr1",
+values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
+tm_shape(carto)+
+  tm_polygons(col="rr",
               palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
               legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
   tm_layout(main.title= input$observed.1, main.title.position ="left", panel.label.size=1,
@@ -1158,14 +1417,26 @@ tm_shape(carto())+
             legend.outside.size=0.25,
             panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
   tm_facets(by="id.time",showNA=FALSE)
-})
+ })
 
 output$map10<- renderPlot({
+model.data<-data.frame(model.data())
+model.data$rr <- joint.inla()$summary.fitted.values[,"mean"] 
+a<-1
+probability<-unlist(lapply(joint.inla()$marginals.fitted.values, function(X){
+  1-inla.pmarginal(a, X)
+}))
+model.data$prob<-probability
+model.data$id<-model.data$id.area
+dat2<-model.data[model.data$disease=="2",]
+sfpolygon<-st_as_sf(map(),fill = TRUE, group = TRUE)
+sfpolygon$id<-row.names(sfpolygon)
+carto <- merge(sfpolygon,dat2,by="id", all.x=TRUE)
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
-values <- c(0.0,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
+values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 
-tm_shape(carto())+
-  tm_polygons(col="rr2",
+tm_shape(carto)+
+  tm_polygons(col="rr",
               palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
               legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
   tm_layout(main.title= input$observed.2, main.title.position ="left", panel.label.size=1,
@@ -1173,14 +1444,27 @@ tm_shape(carto())+
             legend.outside.size=0.25,
             panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
   tm_facets(by="id.time",showNA=FALSE)
+  
 })
 
 
 output$map11<- renderPlot({
+model.data<-data.frame(model.data())
+model.data$rr <- joint.inla()$summary.fitted.values[,"mean"] 
+a<-1
+probability<-unlist(lapply(joint.inla()$marginals.fitted.values, function(X){
+  1-inla.pmarginal(a, X)
+}))
+model.data$prob<-probability
+model.data$id<-model.data$id.area
+dat1<-model.data[model.data$disease=="1",]
+sfpolygon<-st_as_sf(map(),fill = TRUE, group = TRUE)
+sfpolygon$id<-row.names(sfpolygon)
+carto <- merge(sfpolygon,dat1,by="id", all.x=TRUE)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tm_shape(carto())+ tm_polygons(col="prob1",
+tm_shape(carto)+ tm_polygons(col="prob",
               palette=paleta,title = "Pr(Risk>1)",legend.show=T, border.col="transparent",
               legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
  tm_layout(main.title= input$observed.1, main.title.position ="left", panel.label.size=1,
@@ -1188,15 +1472,26 @@ tm_shape(carto())+ tm_polygons(col="prob1",
             legend.outside.size=0.25,
             panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
   tm_facets(by="id.time",showNA=FALSE)
-
 })
 
 
 output$map12<- renderPlot({
+model.data<-data.frame(model.data())
+model.data$rr <- joint.inla()$summary.fitted.values[,"mean"] 
+a<-1
+probability<-unlist(lapply(joint.inla()$marginals.fitted.values, function(X){
+  1-inla.pmarginal(a, X)
+}))
+model.data$prob<-probability
+model.data$id<-model.data$id.area
+dat2<-model.data[model.data$disease=="2",]
+sfpolygon<-st_as_sf(map(),fill = TRUE, group = TRUE)
+sfpolygon$id<-row.names(sfpolygon)
+carto <- merge(sfpolygon,dat2,by="id", all.x=TRUE)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tm_shape(carto())+ tm_polygons(col="prob2",
+tm_shape(carto)+ tm_polygons(col="prob",
               palette=paleta,title = "Pr(Risk>1)",legend.show=T, border.col="transparent",
               legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
  tm_layout(main.title= input$observed.2, main.title.position ="left", panel.label.size=1,
@@ -1399,7 +1694,13 @@ reverse=T,title = "Estimated risk")
 ##Correlation
 output$corr <- renderPrint({
 samples <- inla.posterior.sample(1000, joint.inla())
+if (input$model=="Spatial" | input$model=="Temporal") {
+betas <- sapply(1:1000, function(x) (samples[[x]]$hyperpar)[4:5])
+} else if (input$model=="Spatial + Temporal") {
+betas <- sapply(1:1000, function(x) (samples[[x]]$hyperpar)[7:10])
+} else if (input$model=="Spatiotemporal") {
 betas <- sapply(1:1000, function(x) (samples[[x]]$hyperpar)[10:15])
+}
 betas <- as.data.frame(t(betas))
 rcorr(as.matrix(betas))
 })
