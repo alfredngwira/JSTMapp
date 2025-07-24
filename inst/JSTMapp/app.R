@@ -45,7 +45,7 @@ useShinyjs(), tags$head(
       fluidRow(
         column(4,radioButtons("numbercovariates","Covariates", choices = c("None", "One","Two","Three","Four"),inline=F,selected = "None") ),
         column(4,radioButtons("model","Model", choices = c("Spatial","Temporal","Spatial + Temporal","Spatiotemporal"),inline=F,selected = "Spatial") ), 
-        column(4,radioButtons("precprior","Precison prior", choices = c("logGamma", "Uniform","Half-Cauchy"),inline=F,selected = "logGamma") )
+        column(4,radioButtons("precprior","Precison prior", choices = c("LogGamma", "Uniform","Half-Cauchy"),inline=F,selected = "LogGamma") )
        ),
       helpText("Select covariates (optional):"),
       fluidRow(column(6, uiOutput("covariate1")),column(6, uiOutput("covariate2"))),
@@ -758,7 +758,7 @@ return(model.data4)
 
 ##Precision priors
 prior.prec<-reactive ({
-if (input$precprior == "logGamma"){
+if (input$precprior == "LogGamma"){
 prior.prec = list(prior = "loggamma", param = c(0.5, 0.0005), initial = 0)
 
 return(prior.prec)
