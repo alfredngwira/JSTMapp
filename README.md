@@ -3,7 +3,7 @@
 JSTMapp was developed to ease the fitting of joint spatiotemporal models by R INLA to epidemiologists with limited programming skills. In its current status, it impliments joint spatiotemporal modelling of two diseases with four covariates other than space and time.
 ## How to display the application interface
 ### In R/ RStudio 
-The application can be used in R/Rstudio by launching the application from GitHub author page by executing the following command:
+The application can be used in R/RStudio by launching the application from GitHub author page by executing the following command:
 
 ```shiny::runGitHub("alfredngwira/JSTMapp",subdir="inst/JSTMapp")```
 
