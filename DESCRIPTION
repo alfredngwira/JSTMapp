@@ -1,6 +1,6 @@
 Package: JSTMapp
 Type: Package
-Title: Shiny application to fit joint spatio-temporal model
+Title: Shiny application to fit joint spatiotemporal model
 Version: 1.2
 Author: Alfred Ngwira [cre, aut] (<https://orcid.org/0000-0001-7026-4894>)
 Maintainer: Alfred Ngwira <angwira@luanar.ac.mw>
