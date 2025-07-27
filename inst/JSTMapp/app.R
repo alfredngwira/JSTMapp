@@ -35,17 +35,17 @@ useShinyjs(), tags$head(
   sidebarLayout(
     sidebarPanel(
       fileInput(inputId="filedata", label="Upload data file (.csv):", accept = c("text/csv")),
-      helpText("Select area, time, cases, and population:"),
+      helpText("Select area, time, cases and population:"),
       fluidRow(column(6, uiOutput("id.area")),column(6, uiOutput("id.time"))),
       fluidRow(column(6, uiOutput("observed.1")),column(6, uiOutput("observed.2"))),
       fluidRow(column(6, uiOutput("population.1")),column(6, uiOutput("population.2")))
       ,
       conditionalPanel(condition="input.conditionedPanels==2",
-      helpText("Select number of covariates, model, and precision prior:"),
+      helpText("Select number of covariates, model and precision prior:"),
       fluidRow(
         column(4,radioButtons("numbercovariates","Covariates", choices = c("None", "One","Two","Three","Four"),inline=F,selected = "None") ),
         column(4,radioButtons("model","Model", choices = c("Spatial","Temporal","Spatial + Temporal","Spatiotemporal"),inline=F,selected = "Spatial") ), 
-        column(4,radioButtons("precprior","Precison prior", choices = c("LogGamma", "Uniform","Half-Cauchy"),inline=F,selected = "LogGamma") )
+        column(4,radioButtons("precprior","Precision prior", choices = c("LogGamma", "Uniform","Half-Cauchy"),inline=F,selected = "LogGamma") )
        ),
       helpText("Select covariates (optional):"),
       fluidRow(column(6, uiOutput("covariate1")),column(6, uiOutput("covariate2"))),
@@ -94,9 +94,7 @@ mainPanel(
             ))
 
 server <- function(input, output, session) {
-  observeEvent(input$resetAll, {
-        reset("form") 
-        })
+  
   data.upload <- reactive({
     inFile<-input$filedata
     if (is.null(inFile)) return(NULL)
@@ -1369,7 +1367,7 @@ validate(
     } else {
       FALSE
     },
-    "plot omitted-your model has no temporal componet"
+    "plot omitted-your model has no temporal component"
   )
 )
 rr<-exp(joint.inla()$summary.random$tm.idx1[,"mean"])
