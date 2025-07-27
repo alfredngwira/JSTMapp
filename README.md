@@ -17,7 +17,7 @@ Alternatively, the user can access the JSTMapp’s interface in R/RStudio by exe
 
 ```run_app()```
 
-To run the application in R, the user needs to have the following R packages installed:
+To run the application in R/RStudio, the user needs to have the following R packages installed:
 
 ```shiny, ggplot2,INLA,gridExtra,RColorBrewer,Hmisc,shinyjs,dplyr,spdep,raster,tmap,tidyr,gstat,leaflet,dotwhisker and sn```
 
