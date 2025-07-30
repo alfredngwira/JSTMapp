@@ -1681,13 +1681,13 @@ reverse=T,title = "Estimated risk")+tm_facets(by="id.time")
 
 ##Correlation
 output$corr <- renderPrint({
-samples <- inla.posterior.sample(1000, joint.inla())
+samples <- inla.posterior.sample(2000, joint.inla())
 if (input$model=="Spatial" | input$model=="Temporal") {
-betas <- sapply(1:1000, function(x) (samples[[x]]$hyperpar)[4:5])
+betas <- sapply(1:2000, function(x) (samples[[x]]$hyperpar)[4:5])
 } else if (input$model=="Spatial + Temporal") {
-betas <- sapply(1:1000, function(x) (samples[[x]]$hyperpar)[7:10])
+betas <- sapply(1:2000, function(x) (samples[[x]]$hyperpar)[7:10])
 } else if (input$model=="Spatiotemporal") {
-betas <- sapply(1:1000, function(x) (samples[[x]]$hyperpar)[10:15])
+betas <- sapply(1:2000, function(x) (samples[[x]]$hyperpar)[10:15])
 }
 betas <- as.data.frame(t(betas))
 rcorr(as.matrix(betas))
