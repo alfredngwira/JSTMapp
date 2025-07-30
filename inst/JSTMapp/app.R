@@ -31,9 +31,9 @@ useShinyjs(), tags$head(
       }
     "))
     ), 
-  titlePanel(title=div(img(src="JSTMapp_logo.png", align = "right", height = 30, width = 100), "JSTM(Joint spatiotemporal modelling)")),
+   titlePanel(title=div(img(src="JSTMapp_logo.png", align = "right", height = 30, width = 100), "JSTM(Joint spatiotemporal modelling)")),
   sidebarLayout(
-    sidebarPanel(
+      sidebarPanel(
       fileInput(inputId="filedata", label="Upload data file (.csv):", accept = c("text/csv")),
       helpText("Select area, time, cases and population:"),
       fluidRow(column(6, uiOutput("id.area")),column(6, uiOutput("id.time"))),
@@ -60,17 +60,17 @@ useShinyjs(), tags$head(
 mainPanel(
     tabsetPanel(type="pills",id = "conditionedPanels", 
         tabPanel("Explore",value = 1,fluidRow(fluidRow(
-                            splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:25px",leafletOutput("map1",height="200px")),leafletOutput("map2",height="200px"))
+                            splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:25px",leafletOutput("map1",height="300px")),leafletOutput("map2",height="300px"))
                           ), div(style = "margin-left:12px",plotOutput("plot1",height="350px"))
                         )
                  ),
         tabPanel("Model estimation",value = 2, verbatimTextOutput("summary"),plotOutput("plot2")),
         tabPanel("Spatial and temporal risk",value = 3, fluidRow(fluidRow(
-                            splitLayout(div(style = "margin-left:40px",leafletOutput("map3",height="200px")), leafletOutput("map4",height="200px"),leafletOutput("map5",height="200px"))
+                            splitLayout(div(style = "margin-left:40px",leafletOutput("map3",height="300px")), leafletOutput("map4",height="300px"),leafletOutput("map5",height="300px"))
                           ), fluidRow(
                             splitLayout(div(style = "margin-left:40px",leafletOutput("map6",height="200px")), leafletOutput("map7",height="200px"),leafletOutput("map8",height="200px"))
 
-                          ),div(style = "margin-left:12px",plotOutput("plot4",height="250px")))
+                          ),div(style = "margin-left:12px",plotOutput("plot4",height="200px")))
                         
                          
                         ),
@@ -83,7 +83,7 @@ mainPanel(
                         )
                 ),
 
-        tabPanel("Prediction",value = 5,fluidRow(fluidRow(splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:40px",leafletOutput("map13",height="250px")), leafletOutput("map14",height="250px"))), 
+        tabPanel("Prediction",value = 5,fluidRow(fluidRow(splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:40px",leafletOutput("map13",height="320px")), leafletOutput("map14",height="320px"))), 
                             fluidRow(splitLayout(cellWidths = c("50%", "50%"),div(style = "margin-left:40px",plotOutput("map15",height="250px")), plotOutput("map16",height="250px"))
                           )
                         )
@@ -94,8 +94,8 @@ mainPanel(
             ))
 
 server <- function(input, output, session) {
-  
-  data.upload <- reactive({
+
+   data.upload <- reactive({
     inFile<-input$filedata
     if (is.null(inFile)) return(NULL)
     read.csv(inFile$datapath)
@@ -218,11 +218,11 @@ carto <- merge(sfpolygon,region.data, by="id")
 
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
-tmap_leaflet(tm_shape(carto)+
-  tm_polygons(col="rr1",
-              palette=paleta,title = "Raw incidence ratio",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, midpoint = NA, interval.closure="left",showNA=TRUE,colorNA="white")+
-tm_layout(title=input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),
+tmap_leaflet(tm_shape(carto)+ 
+  tm_polygons(fill="rr1", col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta,breaks=values,
+  value.na = "grey95"),fill.legend = tm_legend(show = T,title="Raw incidence ratio",reverse=T,na.show=T,size=0.7))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title(input$observed.1)
+,
 in.shiny = TRUE)
    })
 })
@@ -250,10 +250,11 @@ paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 
 tmap_leaflet(tm_shape(carto)+
-  tm_polygons(col="rr2",
-              palette=paleta,title = "Raw incidence ratio",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, midpoint = NA, interval.closure="left",showNA=TRUE,colorNA="white")+
-  tm_layout(title=input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),in.shiny = TRUE)
+  tm_polygons(fill="rr2",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left",
+  value.na = "grey95"),fill.legend = tm_legend(show = T,title="Raw incidence ratio",reverse=T,na.show=T,size=0.7))+
+tm_layout(legend.outside.position = tm_pos_out("right", "bottom"),inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title(input$observed.2),
+in.shiny = TRUE)
+
   })
 })
 
@@ -1004,7 +1005,7 @@ formula<-observed~-1+intercept+covariate1.1+covariate1.2+covariate2.1+covariate2
   f(sp.tm.dum,model="iid",hyper=list(prec=prior.prec()))+
   f(sp.tm.1,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))+
   f(sp.tm.2,copy="sp.tm.dum",range=c(0,Inf),hyper=list(beta=prior.beta.s.t))
-}
+  }
 
 } else if (input$numbercovariates=="Three") {
 if (input$model=="Spatial") {
@@ -1244,10 +1245,9 @@ validate(
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tmap_leaflet(tm_shape(spatial.data()$carto1)+
-  tm_polygons(col="rr",
-              palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, midpoint = NA, interval.closure="left")+
-tm_layout(title=input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),in.shiny=TRUE)
+  tm_polygons(fill="rr",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left"),
+  fill.legend = tm_legend(show = T,title="Relative risk",reverse=T,size=0.8))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title(input$observed.1),in.shiny=TRUE)
    
 })
 
@@ -1266,10 +1266,9 @@ validate(
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tmap_leaflet(tm_shape(spatial.data()$carto2)+
-  tm_polygons(col="rr",
-              palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, midpoint = NA, interval.closure="left")+
-tm_layout(title=input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))
+  tm_polygons(fill="rr",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left"),
+  fill.legend = tm_legend(show = T,title="Relative risk",reverse=T,size=0.8))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title(input$observed.2)
 ,in.shiny=TRUE)
 })
 
@@ -1285,13 +1284,12 @@ validate(
     "map omitted-your model is non spatial"
   )
 )
-paleta <- brewer.pal(10,"RdYlGn")[10:1]
+paleta <- brewer.pal(8,"RdYlGn")[8:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tmap_leaflet(tm_shape(spatial.data()$carto3)+
-  tm_polygons(col="rr",
-              palette=paleta,title = "Relative risk", legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, midpoint = NA, interval.closure="left")+
-tm_layout(title="Shared",inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))
+  tm_polygons(fill="rr",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left"),
+  fill.legend = tm_legend(show = T,title="Relative risk",reverse=T,size=0.8))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title("Shared")
 ,in.shiny=TRUE)
 })
 
@@ -1310,10 +1308,10 @@ validate(
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tmap_leaflet(tm_shape(spatial.data()$carto1)+ tm_polygons(col="prob",
-              palette=paleta, title = "Pr(Risk>1)", legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left")+
-tm_layout(title=input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))
+tmap_leaflet(tm_shape(spatial.data()$carto1)+ 
+tm_polygons(fill="prob",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left"),
+  fill.legend = tm_legend(show = T,title="Pr(Risk>1)",reverse=T, size=0.8))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title(input$observed.1)
 ,in.shiny=TRUE)
 })
 
@@ -1331,10 +1329,10 @@ validate(
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tmap_leaflet(tm_shape(spatial.data()$carto2)+ tm_polygons(col="prob",
-              palette=paleta,title = "Pr(Risk>1)", legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left")+
-tm_layout(title=input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),in.shiny=TRUE)
+tmap_leaflet(tm_shape(spatial.data()$carto2)+ 
+tm_polygons(fill="prob",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left"),
+  fill.legend = tm_legend(show = T,title="Pr(Risk>1)",reverse=T,size=0.8))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title(input$observed.2),in.shiny=TRUE)
 })
 
 
@@ -1352,10 +1350,10 @@ validate(
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tmap_leaflet(tm_shape(spatial.data()$carto3)+ tm_polygons(col="prob",
-              palette=paleta,title = "Pr(Risk>1)",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left")+
-tm_layout(title="Shared",inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00)),in.shiny=TRUE)
+tmap_leaflet(tm_shape(spatial.data()$carto3)+ 
+tm_polygons(fill="prob",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left"),
+  fill.legend = tm_legend(show = T,title="Pr(Risk>1)",reverse=T,size=0.8))+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_title("Shared"),in.shiny=TRUE)
 
 })
 
@@ -1408,14 +1406,10 @@ carto <- merge(sfpolygon,dat1,by="id", all.x=TRUE)
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 tm_shape(carto)+
-  tm_polygons(col="rr",
-              palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
-  tm_layout(main.title= input$observed.1, main.title.position ="left", panel.label.size=1,
-            legend.outside=T, legend.outside.position="right",legend.frame=F,
-            legend.outside.size=0.25,
-            panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
-  tm_facets(by="id.time",showNA=FALSE)
+  tm_polygons(fill="rr",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left",value.na = "white"),
+  fill.legend = tm_legend(show = T,title="Relative risk",reverse=T,size=0.25,frame=F,na.show=T))+tm_title(input$observed.1) +
+  tm_layout(panel.label.size=1,panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +
+  tm_facets(by="id.time",free.coords = TRUE,drop.NA.facets=T)
  })
 
 output$map10<- renderPlot({
@@ -1435,15 +1429,10 @@ paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
 
 tm_shape(carto)+
-  tm_polygons(col="rr",
-              palette=paleta,title = "Relative risk",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
-  tm_layout(main.title= input$observed.2, main.title.position ="left", panel.label.size=1,
-            legend.outside=T, legend.outside.position="right",legend.frame=F,
-            legend.outside.size=0.25,
-            panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
-  tm_facets(by="id.time",showNA=FALSE)
-  
+  tm_polygons(fill="rr",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left",value.na = "white"),
+  fill.legend = tm_legend(show = T,title="Relative risk",reverse=T,size=0.25,frame=F,na.show=T))+tm_title(input$observed.2) +
+  tm_layout(panel.label.size=1,panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) + tmap_options(component.autoscale = TRUE)+
+  tm_facets(by="id.time",drop.NA.facets=T)
 })
 
 
@@ -1463,14 +1452,11 @@ carto <- merge(sfpolygon,dat1,by="id", all.x=TRUE)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tm_shape(carto)+ tm_polygons(col="prob",
-              palette=paleta,title = "Pr(Risk>1)",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
- tm_layout(main.title= input$observed.1, main.title.position ="left", panel.label.size=1,
-            legend.outside=T, legend.outside.position="right",legend.frame=F,
-            legend.outside.size=0.25,
-            panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
-  tm_facets(by="id.time",showNA=FALSE)
+tm_shape(carto)+ 
+tm_polygons(fill="prob",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left",value.na = "white"),
+  fill.legend = tm_legend(show = T,title="Pr(Risk>1)",reverse=T,size=0.25,frame=F,na.show=T))+tm_title(input$observed.1) +
+  tm_layout(panel.label.size=1,panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) + tmap_options(component.autoscale = TRUE)+
+  tm_facets(by="id.time",drop.NA.facets=T)
 })
 
 
@@ -1490,14 +1476,11 @@ carto <- merge(sfpolygon,dat2,by="id", all.x=TRUE)
 #Posterior probability plot
 paleta <- brewer.pal(4,"RdYlGn")[4:1]
 values <- c(0,0.5,0.8,0.9,1)
-tm_shape(carto)+ tm_polygons(col="prob",
-              palette=paleta,title = "Pr(Risk>1)",legend.show=T, border.col="transparent",
-              legend.reverse=T, style="fixed", breaks=values, interval.closure="left",showNA=TRUE,colorNA="white") +
- tm_layout(main.title= input$observed.2, main.title.position ="left", panel.label.size=1,
-            legend.outside=T, legend.outside.position="right",legend.frame=F,
-            legend.outside.size=0.25,
-            panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) +tmap_options(check.and.fix = TRUE)+
-  tm_facets(by="id.time",showNA=FALSE)
+tm_shape(carto)+ 
+tm_polygons(fill="prob",col="black",col_alpha=0,fill.scale = tm_scale_intervals(values = paleta, style = "fixed",breaks=values, midpoint = NA, interval.closure="left",value.na = "white"),
+  fill.legend = tm_legend(show = T,title="Pr(Risk>1)",reverse=T,size=0.25,frame=F,na.show=T))+tm_title(input$observed.2) +
+  tm_layout(panel.label.size=1,panel.labels=as.character(round(seq(min(data.select0()$id.time), max(data.select0()$id.time),length.out=(length(unique(data.select0()$id.time))))))) + tmap_options(component.autoscale = TRUE)+
+  tm_facets(by="id.time",drop.NA.facets=T)
 })
 
 #13 and 14
@@ -1575,21 +1558,23 @@ return(
 output$map13<- renderLeaflet({
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
-tmap_leaflet(tm_shape(prediction.raw()$RRforecastsf1) + tm_dots(col="RR",breaks=values,palette=paleta,legend.show=F) +
-tm_layout(title=input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+
-tm_add_legend(type="fill",col = paleta,border.alpha=0,size=0.25,title = "Raw incidence ratio",
-labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
-reverse=F),in.shiny=TRUE)
+tmap_leaflet(tm_shape(prediction.raw()$RRforecastsf1) + tm_dots(fill="RR",fill.scale = tm_scale_intervals(values = paleta, breaks=values),fill.legend = tm_legend(show=F,size=0.8))+
+tm_title(input$observed.1)+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_add_legend(type="polygons", 
+fill = paleta,col_alpha=0,labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
+reverse=T,title = "Raw incidence ratio")
+,in.shiny=TRUE)
 })
 
 output$map14<- renderLeaflet({
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
-tmap_leaflet(tm_shape(prediction.raw()$RRforecastsf2) + tm_dots(col="RR",breaks=values,palette=paleta,legend.show=F) +
-tm_layout(title=input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+
-tm_add_legend(type="fill", 
-col = paleta,border.alpha=0,size=0.25,title = "Raw incidence ratio",labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
-reverse=F),in.shiny=T)
+tmap_leaflet(tm_shape(prediction.raw()$RRforecastsf2) + tm_dots(fill="RR",fill.scale = tm_scale_intervals(values = paleta, breaks=values),fill.legend = tm_legend(show=F,size=0.8))+
+tm_title(input$observed.2)+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00))+tm_add_legend(type="polygons", 
+fill = paleta,col_alpha=0,labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
+reverse=T,title = "Raw incidence ratio")
+,in.shiny=TRUE)
 })
 
 output$map15<- renderPlot({
@@ -1634,10 +1619,12 @@ RRforecastsf <- st_as_sf(RRforecast,coords = c('x1', 'x2'), crs = 4326)
 
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
-tm_shape(RRforecastsf) + tm_dots(col="RR",breaks=values,palette=paleta,legend.show=F) +
-tm_layout(main.title= input$observed.1,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00),panel.label.size=1,legend.outside.size=0.25)+tm_facets(by="id.time")+tm_add_legend(type="fill", 
-col = paleta,border.alpha=0,labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
-reverse=T,title = "Estimated risk")
+tm_shape(RRforecastsf) + tm_dots(fill="RR",fill.scale = tm_scale_intervals(values = paleta, breaks=values),fill.legend = tm_legend(show=F))+
+tm_title(input$observed.1)+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00),panel.label.size=1)+tm_add_legend(type="polygons", 
+fill = paleta,col_alpha=0,labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
+reverse=T,title = "Estimated risk")+tm_facets(by="id.time")
+
 })
 
 
@@ -1683,10 +1670,12 @@ RRforecastsf <- st_as_sf(RRforecast,coords = c('x1', 'x2'), crs = 4326)
 
 paleta <- brewer.pal(10,"RdYlGn")[10:1]
 values <- c(-Inf,0.05,0.1,0.2,0.4,0.6,0.8,1,1.2,1.4,Inf)
-tm_shape(RRforecastsf) + tm_dots(col="RR",breaks=values,palette=paleta,legend.show=F) +
-tm_layout(main.title= input$observed.2,inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00),panel.label.size=1,legend.outside.size=0.25)+tm_facets(by="id.time")+tm_add_legend(type="fill", 
-col = paleta,border.alpha=0,labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
-reverse=T,title = "Estimated risk")
+tm_shape(RRforecastsf) + tm_dots(fill="RR",fill.scale = tm_scale_intervals(values = paleta, breaks=values),fill.legend = tm_legend(show = F))+
+tm_title(input$observed.2)+
+tm_layout(inner.margins = c(0.00, 0.00, 0.00, 0.00),outer.margins = c(0.00, 0.00, 0.00, 0.00),panel.label.size=1)+
+tm_add_legend(type="polygons", 
+fill = paleta,bg.alpha = 0,col_alpha=0,labels = c("Less than 0.05","0.05 to 0.10","0.10 to 0.20","0.20 to 0.40","0.40 to 0.60","0.60 to 0.80","0.80 to 1.00","1.00 to 1.20","1.20 to 1.40","1.40 or more"),
+reverse=T,title = "Estimated risk")+tm_facets(by="id.time")
 })
 
 
